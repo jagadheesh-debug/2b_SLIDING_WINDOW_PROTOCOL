@@ -10,71 +10,73 @@
 ## PROGRAM
 ## CLIENT
 ```
+
 import socket
 
-skt = socket.socket()
-skt.bind(('localhost', 1234))
-skt.listen(5)
-print("Waiting for server connection...")
-c, addr = skt.accept()
+s = socket.socket()
+s.connect(("localhost", 8000))
 
-while True:
-    try:
-        size = int(input("Enter number of frames to send: "))
-        if size > 0:
-            break
-        print("Enter a positive number.")
-    except ValueError:
-        print("Invalid input! Enter numbers only.")
+n = int(input("Enter number of frames: "))
+w = int(input("Enter window size: "))
 
-frames = list(range(size))
+frames = []
 
-while True:
-    try:
-        window = int(input("Enter Window Size: "))
-        if 0 < window <= size:
-            break
-        print("Enter a valid window size.")
-    except ValueError:
-        print("Invalid input! Enter numbers only.")
+for i in range(n):
+    data = input("Enter data for frame " + str(i + 1) + ": ")
+    frames.append(data)
 
-start = 0
+i = 0
 
-while start < len(frames):
-    end = min(start + window, len(frames))
-    c.send(str(frames[start:end]).encode())
-    ack = c.recv(1024).decode()
-    if ack:
-        print(ack)
-    start = end
+while i < n:
+    print("\nSending frames:")
 
-c.close()
-skt.close()
+    for j in range(i, min(i + w, n)):
+        print("Sending:", frames[j])
+        s.send(frames[j].encode())
+
+        ack = s.recv(1024).decode()
+        print("Received:", ack)
+
+    i = i + w
+
+s.send("exit".encode())
+s.close()
+
 ```
 ## SERVER
 ```
 import socket
 
 s = socket.socket()
-s.connect(('localhost', 1234))
+s.bind(("localhost", 8000))
+s.listen(1)
+
+print("Server waiting for client...")
+
+c, addr = s.accept()
+print("Client connected!")
 
 while True:
-    data = s.recv(1024).decode()
+    data = c.recv(1024).decode()
 
-    if not data:
+    if data == "exit":
         break
 
-    print("Received frames:", data)
-    s.send("Acknowledgement received from the server".encode())
+    print("Received:", data)
 
+    c.send("ACK".encode())
+    print("ACK sent")
+
+c.close()
 s.close()
+
 ```
 ## OUPUT
 ## CLIENT
-<img width="948" height="325" alt="Screenshot 2026-11-04 090437" src="https://github.com/user-attachments/assets/d24fb4b3-3a30-4a6d-86ba-aff8ce34c33b" />
+<img width="536" height="410" alt="image" src="https://github.com/user-attachments/assets/b301a359-108d-4593-afa3-a2571ba9638c" />
 
 ## SERVER
-<img width="690" height="203" alt="Screenshot 2026-11-04 090447" src="https://github.com/user-attachments/assets/a58d4e5a-52dd-4589-b423-5766e6d9f830" />
+<img width="490" height="272" alt="image" src="https://github.com/user-attachments/assets/38c80935-55c1-4c5c-8078-6152da1bb9ba" />
 
 
 ## RESULT
